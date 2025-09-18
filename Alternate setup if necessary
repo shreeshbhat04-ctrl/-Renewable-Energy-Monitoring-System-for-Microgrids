@@ -1,0 +1,12 @@
+If Lora does not work make esp8266 to directly take input using HTTPS links using the block diagram given below->[ML server]--[Blynk app]--[Node MCU]-->[Relay channels] 
+                                                                                                                                               |
+                                                                                                                               [Pzem-004T]------------[Dht11]
+                                                                                                                                               |
+                                                                                                                                       [Stable 5v supply]
+Necesarry  libraries in arduino ide--
+ <ESP8266WiFi.h>
+ <BlynkSimpleEsp8266.h>
+ <DHT.h>
+ <ESP8266HTTPClient.h>
+ <WiFiClient.h>
+ <ArduinoJson.h>
