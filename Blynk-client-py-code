@@ -1,0 +1,117 @@
+// Takes live input from blynk cloud to Ml server
+import blynklib
+import requests
+import time
+import logging
+
+# ---------- CONFIG ----------
+BLYNK_AUTH = "fcEhi3KDWWr2fjTfdUOQ07k02bEGJqMK"  # your Blynk token
+API_URL = "http://127.0.0.1:8000/predict"       # FastAPI server (replace if remote)
+
+# --- Virtual pin mapping (match ESP code) ---
+VP_VOLTAGE = "V1"        # Voltage
+VP_CURRENT = "V2"        # Current
+VP_POWER = "V3"          # Power
+VP_TEMPERATURE = "V4"    # Temperature
+
+VP_PREDICTION_OUT = 5      # Prediction label
+VP_PROB_STABLE = 6         # Probability Stable
+VP_PROB_UNSTABLE = 7       # Probability Unstable
+VP_RELAY_RENEWABLE = 10    # Relay channel 1
+VP_RELAY_MICROGRID = 11    # Relay channel 2
+
+# ----------------------------
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
+blynk = blynklib.Blynk(BLYNK_AUTH)
+sensor_data = {}
+
+# -----------------------------
+# Send data to server
+# -----------------------------
+def send_to_server(voltage, current, power, temperature):
+    payload = {
+        "Voltage": float(voltage),
+        "Current": float(current),
+        "Power": float(power),
+        "Battery_Temperature": float(temperature)
+    }
+
+    try:
+        resp = requests.post(API_URL, json=payload, timeout=5)
+        if resp.status_code != 200:
+            logging.error("Server returned %s: %s", resp.status_code, resp.text)
+            return
+
+        data = resp.json()
+        prediction = data.get("prediction")
+        probs = data.get("probabilities", {})
+
+        logging.info("Prediction=%s | Probs=%s", prediction, probs)
+
+        # Write results back to Blynk
+        blynk.virtual_write(VP_PREDICTION_OUT, str(prediction))
+        blynk.virtual_write(VP_PROB_STABLE, float(probs.get("Stable", 0.0)))
+        blynk.virtual_write(VP_PROB_UNSTABLE, float(probs.get("Unstable", 0.0)))
+
+        # Relay control logic
+        if str(prediction).lower().startswith("stable"):
+            logging.info("Relay Control: Renewable ON, Microgrid OFF")
+            blynk.virtual_write(VP_RELAY_RENEWABLE, 1)
+            blynk.virtual_write(VP_RELAY_MICROGRID, 0)
+        else:
+            logging.info("Relay Control: Renewable OFF, Microgrid ON")
+            blynk.virtual_write(VP_RELAY_RENEWABLE, 0)
+            blynk.virtual_write(VP_RELAY_MICROGRID, 1)
+
+    except Exception as e:
+        logging.exception("Error sending to server: %s", e)
+
+# -----------------------------
+# Handlers for inputs
+# -----------------------------
+@blynk.handle_event('write ' + VP_VOLTAGE)
+def handle_voltage(pin, value):
+    sensor_data['Voltage'] = float(value[0]) if value else 0.0
+    try_send()
+
+@blynk.handle_event('write ' + VP_CURRENT)
+def handle_current(pin, value):
+    sensor_data['Current'] = float(value[0]) if value else 0.0
+    try_send()
+
+@blynk.handle_event('write ' + VP_POWER)
+def handle_power(pin, value):
+    sensor_data['Power'] = float(value[0]) if value else 0.0
+    try_send()
+
+@blynk.handle_event('write ' + VP_TEMPERATURE)
+def handle_temp(pin, value):
+    sensor_data['Temperature'] = float(value[0]) if value else 0.0
+    try_send()
+
+# -----------------------------
+# Only send when all inputs ready
+# -----------------------------
+def try_send():
+    required = ['Voltage', 'Current', 'Power', 'Temperature']
+    if all(k in sensor_data for k in required):
+        send_to_server(
+            sensor_data['Voltage'],
+            sensor_data['Current'],
+            sensor_data['Power'],
+            sensor_data['Temperature']
+        )
+        sensor_data.clear()
+
+# -----------------------------
+# Main loop
+# -----------------------------
+if _name_ == "_main_":
+    logging.info("🚀 Starting Blynk client. Waiting for sensor data...")
+    while True:
+        try:
+            blynk.run()
+        except Exception:
+            logging.exception("blynk.run() crashed, restarting in 2s...")
+            time.sleep(2)
