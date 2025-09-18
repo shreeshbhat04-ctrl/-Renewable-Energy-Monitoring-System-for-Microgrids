@@ -8,7 +8,7 @@ The growing incorporation of renewable energy sources into microgrids creates in
   - FastAPI server with KNN/ML model predicts grid status (*Stable* / *Unstable*).  
   - Weather API (e.g., OpenWeatherMap) supplies forecast data to enhance model accuracy.  
 - **Multi-Hop Connectivity**  
-  - Optional **LoRa SX1278** modules enable long-range, low-power communication between remote microgrids and a central ESP8266 gateway.  
+  -**LoRa SX1278** modules enable long-range, low-power communication between remote microgrids and a central ESP8266 gateway.  
 - **Automated Control**  
   - ESP8266 triggers relays to balance loads or isolate faults.  
 - **Cloud Dashboard**  
