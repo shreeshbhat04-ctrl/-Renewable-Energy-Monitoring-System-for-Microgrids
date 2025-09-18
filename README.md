@@ -16,9 +16,13 @@ The growing incorporation of renewable energy sources into microgrids creates in
 -**Communication module (LoRa)**: Each microgrid relay channel uses Arduino + SX1278 to gather sensor data and send it via LoRa.
 - **Gateway**: ESP8266 receives LoRa packets, posts JSON to FastAPI, and updates Blynk.
 - **Backend**: FastAPI merges sensor data with **Weather API** forecasts before running the ML prediction in that way providing the most optimised output.
+- 
 | Component          | Purpose |
+
 |--------------------|--------|
+
 **Transmitter side**
+
 | ESP8266 (NodeMCU)  | Wi-Fi gateway and relay controller |
 
 |LoRa sensor module  | Transmitter data controlling       |
