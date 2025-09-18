@@ -19,16 +19,26 @@ The growing incorporation of renewable energy sources into microgrids creates in
 | Component          | Purpose |
 |--------------------|--------|
 **Transmitter side**
-| ESP8266 (NodeMCU)  | Wi-Fi gateway and relay controller | 
+| ESP8266 (NodeMCU)  | Wi-Fi gateway and relay controller |
+
 |LoRa sensor module  | Transmitter data controlling       |
+
 | 4-Channel Relay    | Load control                       |
+
 **Reciever side**
+
 | PZEM-004T v3       | AC voltage/current/power sensing   |
+
 | DHT11              | Temperature & humidity             |
+
 |Arduino Uno         | Takes the data and send it Nodemcu |
+
 | LoRa SX1278 (433 MHz) | Long-range RF link              |
+
 | 4-Channel Relay       |       Load control              |
+
 | Power supply & wiring | Stable DC source                |
+
 ##  Project setup ##
 
 ### Hardware Setup
